@@ -207,3 +207,18 @@ if(sub1Marks > 40 && sub2Marks > 40){
 } else{
     console.log("You failed")
 }
+
+
+// Q25. Character check: ek letter lo aur batao vowel hai ya consonant.
+
+// Input: 'e' → Output: "Vowel"
+
+let character: string = "e"
+let vowel: string = "aeiou"
+
+if (vowel.includes(character)){
+    console.log("Vowel")
+}else{
+    console.log("Constant")
+}
+

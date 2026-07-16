@@ -150,4 +150,28 @@ else {
 // Q23. Discount calculator: agar bill 5000 se zyada hai to 10% discount, warna 0%. Final amount print karo.
 let totalPrice = 5500;
 let discountedPrice = totalPrice * 0.9;
-console.log(discountedPrice);
+if (totalPrice <= 5000) {
+    console.log(`no discount available your total is ${totalPrice}`);
+}
+else {
+    console.log(`Wow you got 10% discount your total is ${discountedPrice}`);
+}
+// Q24. Nested if-else: student ka pass/fail check karo do subjects ki marks se (dono mein 40+ chahiye pass hone k liye).
+let sub1Marks = 32;
+let sub2Marks = 45;
+if (sub1Marks > 40 && sub2Marks > 40) {
+    console.log("You are pass");
+}
+else {
+    console.log("You failed");
+}
+// Q25. Character check: ek letter lo aur batao vowel hai ya consonant.
+// Input: 'e' → Output: "Vowel"
+let character = "e";
+let vowel = "aeiou";
+if (vowel.includes(character)) {
+    console.log("Vowel");
+}
+else {
+    console.log("Constant");
+}
