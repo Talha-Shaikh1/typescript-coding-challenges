@@ -52,5 +52,9 @@ function average(arr) {
     return average;
 }
 console.log(average([10, 20, 30]));
-let array = [2, 40, 5, 6,];
-console.log(Math.max(...array));
+// Q33. Function banao findMax(arr: number[]): number jo array ka largest number return kare.
+function findMax(arr) {
+    let largestArr = Math.max(...arr);
+    return largestArr;
+}
+console.log(findMax([2, 5, 6353, 644]));
