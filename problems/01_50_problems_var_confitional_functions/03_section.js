@@ -58,3 +58,12 @@ function findMax(arr) {
     return largestArr;
 }
 console.log(findMax([2, 5, 6353, 644]));
+// Q34. Function banao factorial(n: number) jo n ka factorial calculate kare (loop se).
+// factorial(5) → 120
+function factorial(n) {
+    if (n === 0 || n === 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+console.log(factorial(5));
