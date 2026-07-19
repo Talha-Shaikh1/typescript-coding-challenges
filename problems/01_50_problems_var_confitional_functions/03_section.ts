@@ -102,3 +102,37 @@ function factorial(n: number): number{
 }
 
 console.log(factorial(5))
+
+
+// Q35. Function banao isPrime(num: number): boolean.
+
+
+function isPrime(n: number): boolean{
+    if (n < 2 ) {
+        return false
+    }
+    for (let i = 2; i < n; i++) {
+        if (n % i == 0) {
+            return false
+        }       
+    }
+    return true
+
+}
+
+console.log(isPrime(7))
+
+// Q36. Function banao reverseString(str: string): string.
+
+// reverseString("hello") → "olleh"
+
+function reverseString(str: string){
+    // return(str.split("").reverse().join(""))
+    let reverseString = ""
+    for(let i = str.length - 1; i >= 0; i--){
+        reverseString += str[i]
+        return reverseString
+    }
+}
+
+console.log(reverseString("hello"))

@@ -67,3 +67,22 @@ function factorial(n) {
     return n * factorial(n - 1);
 }
 console.log(factorial(5));
+// Q35. Function banao isPrime(num: number): boolean.
+function isPrime(n) {
+    if (n < 2) {
+        return false;
+    }
+    for (let i = 2; i < n; i++) {
+        if (n % i == 0) {
+            return false;
+        }
+    }
+    return true;
+}
+console.log(isPrime(7));
+// Q36. Function banao reverseString(str: string): string.
+// reverseString("hello") → "olleh"
+function reverseString(str) {
+    return (str.split("").reverse().join(""));
+}
+console.log(reverseString("hello"));
