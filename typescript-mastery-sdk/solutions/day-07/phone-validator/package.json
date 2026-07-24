@@ -1,0 +1,21 @@
+{
+  "name": "phone-validator-solution",
+  "version": "1.0.0",
+  "description": "Complete solution for Week 1 Practice Project - Phone Validator",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "example": "tsx examples/usage.ts",
+    "check": "tsc --noEmit"
+  },
+  "keywords": [
+    "typescript",
+    "phone",
+    "validator",
+    "formatter",
+    "whatsapp",
+    "solution"
+  ],
+  "author": "Talha Shaikh",
+  "license": "MIT"
+}

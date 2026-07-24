@@ -1,0 +1,24 @@
+{
+  "name": "phone-validator",
+  "version": "0.1.0",
+  "description": "TypeScript phone number validator and formatter - Week 1 Practice Project",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "example": "tsx examples/usage.ts",
+    "check": "tsc --noEmit"
+  },
+  "keywords": [
+    "typescript",
+    "phone",
+    "validator",
+    "formatter",
+    "whatsapp"
+  ],
+  "author": "Talha Shaikh",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "tsx": "^4.0.0"
+  }
+}
