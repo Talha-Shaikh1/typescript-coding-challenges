@@ -1,0 +1,132 @@
+# Exercise 2: Configure Declaration Generation
+
+Configure tsconfig.json to generate declaration files properly.
+
+---
+
+## Your Task
+
+Complete this tsconfig.json for WhatsApp SDK production build.
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./src",
+
+    // TODO: Enable declaration file generation
+    // Question: Why is this needed for npm packages?
+    "declaration": false,
+
+    // TODO: Enable declaration source maps
+    // Question: What does this enable for users?
+    "declarationMap": false,
+
+    // TODO: Should we also generate regular source maps?
+    "sourceMap": false,
+
+    // TODO: Should we remove comments from output?
+    "removeComments": false,
+
+    // TODO: Enable strict type checking?
+    "strict": false,
+
+    // TODO: Skip output if there are errors?
+    "noEmitOnError": false,
+
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}
+```
+
+---
+
+## Questions to Answer
+
+For each option you set, answer:
+
+### 1. declaration
+**Value:** ___________
+**Why:** _________________________________________________________
+**What if false:** ___________________________________________________
+
+### 2. declarationMap
+**Value:** ___________
+**Why:** _________________________________________________________
+**What it enables:** _________________________________________________
+
+### 3. sourceMap
+**Value:** ___________
+**Why:** _________________________________________________________
+**Difference from declarationMap:** ____________________________________
+
+### 4. removeComments
+**Value:** ___________
+**Why:** _________________________________________________________
+
+### 5. strict
+**Value:** ___________
+**Why:** _________________________________________________________
+
+### 6. noEmitOnError
+**Value:** ___________
+**Why:** _________________________________________________________
+
+---
+
+## Verification
+
+After configuring:
+
+1. Create a simple TypeScript file:
+```typescript
+// src/test.ts
+export interface TestType {
+  value: string;
+}
+
+export class TestClass {
+  constructor(private data: string) {}
+  getData(): string {
+    return this.data;
+  }
+}
+```
+
+2. Compile:
+```bash
+tsc
+```
+
+3. Check output:
+```bash
+ls dist/
+# Should see:
+# test.js
+# test.d.ts
+# test.d.ts.map (if declarationMap: true)
+# test.js.map (if sourceMap: true)
+```
+
+4. Verify .d.ts content:
+```bash
+cat dist/test.d.ts
+# Should show type definitions
+```
+
+---
+
+## Success Criteria
+
+- [ ] .d.ts files generated
+- [ ] Declaration maps generated (if enabled)
+- [ ] Source maps generated (if enabled)
+- [ ] No compilation errors
+- [ ] Understands purpose of each option

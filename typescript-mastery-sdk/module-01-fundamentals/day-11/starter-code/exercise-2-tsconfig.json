@@ -1,0 +1,76 @@
+{
+  "compilerOptions": {
+    // TODO: Configure these for WhatsApp SDK production build
+
+    /* Language & Environment */
+    // TODO: What JavaScript version should we target?
+    // Hint: Node.js 18+ supports ES2022
+    "target": "",
+
+    // TODO: What module system?
+    // Hint: Modern import/export
+    "module": "",
+
+    /* Output Directories */
+    // TODO: Where should compiled JavaScript go?
+    "outDir": "",
+
+    // TODO: Where is the TypeScript source?
+    "rootDir": "",
+
+    /* Type Definitions */
+    // TODO: Should we generate .d.ts files for npm users?
+    // Hint: npm packages need type definitions!
+    "declaration": false,
+
+    // TODO: Should we generate source maps for .d.ts?
+    // Hint: Enables "Go to Definition" in user's IDE
+    "declarationMap": false,
+
+    /* Source Maps */
+    // TODO: Should we generate .js.map files for debugging?
+    "sourceMap": false,
+
+    /* Optimizations */
+    // TODO: Should we use incremental compilation?
+    // Hint: Makes rebuilds faster
+    "incremental": false,
+
+    // TODO: Should we remove comments from output?
+    // Hint: Smaller bundle size in production
+    "removeComments": false,
+
+    /* Type Checking */
+    // TODO: Should we enable strict mode?
+    // Hint: Production libraries should be strict!
+    "strict": false,
+
+    // TODO: Should we skip output if there are type errors?
+    // Hint: Don't ship broken code!
+    "noEmitOnError": false,
+
+    /* Other */
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+
+  // TODO: Which files should we compile?
+  "include": [],
+
+  // TODO: Which files should we skip?
+  "exclude": []
+}
+
+/**
+ * QUESTIONS TO ANSWER:
+ *
+ * 1. Why is "declaration: true" important for npm packages?
+ * (Your answer here)
+ *
+ * 2. What happens if "noEmitOnError" is false and there are type errors?
+ * (Your answer here)
+ *
+ * 3. Why use "incremental: true" for development but not production?
+ * (Your answer here)
+ */

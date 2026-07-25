@@ -1,0 +1,38 @@
+{
+  "name": "@example/whatsapp-utils",
+  "version": "0.1.0",
+  "description": "Example utility package for WhatsApp SDK development",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "test": "echo 'Tests would run here'",
+    "lint": "echo 'Linting would run here'",
+    "format": "echo 'Formatting would run here'"
+  },
+  "keywords": [
+    "whatsapp",
+    "utils",
+    "sdk",
+    "typescript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0"
+  }
+}

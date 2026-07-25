@@ -1,0 +1,84 @@
+{
+  "compilerOptions": {
+    /* Language and Environment */
+    "target": "ES2022",
+    // WHY: Node.js 18+ supports ES2022 features
+    // WHAT IT DOES: Converts TypeScript to ES2022 JavaScript
+    // IMPACT: Modern features like top-level await, private fields work
+
+    /* Modules */
+    "module": "ESNext",
+    // WHY: Modern import/export syntax
+    // ALTERNATIVE: "CommonJS" for older Node.js
+    // IMPACT: Enables tree-shaking and modern bundlers
+
+    "moduleResolution": "node",
+    // WHY: Tells TypeScript how to find imports
+    // WHAT IT DOES: Looks in node_modules like Node.js does
+    // IMPACT: Makes imports work correctly
+
+    /* Emit */
+    "outDir": "./dist",
+    // WHY: Separates compiled code from source
+    // WHAT IT DOES: Puts all .js files in dist/
+    // IMPACT: Clean project structure, easy to publish
+
+    "rootDir": "./src",
+    // WHY: Defines source code root
+    // WHAT IT DOES: Maintains folder structure in dist/
+    // IMPACT: dist/index.js instead of dist/src/index.js
+
+    "declaration": true,
+    // WHY: Generate .d.ts type definition files
+    // WHAT IT DOES: Creates type files for npm consumers
+    // IMPACT: Users get autocomplete and type checking
+
+    "declarationMap": true,
+    // WHY: Source maps for .d.ts files
+    // WHAT IT DOES: Enables "Go to Definition" in VS Code
+    // IMPACT: Better developer experience
+
+    "sourceMap": true,
+    // WHY: Debug support
+    // WHAT IT DOES: Creates .js.map files
+    // IMPACT: Can debug TypeScript code directly
+
+    /* Interop Constraints */
+    "esModuleInterop": true,
+    // WHY: Better CommonJS import compatibility
+    // EXAMPLE: import axios from 'axios' works correctly
+    // IMPACT: No need for import * as axios
+
+    "forceConsistentCasingInFileNames": true,
+    // WHY: Prevents Windows/Mac filename case issues
+    // EXAMPLE: Import './Client' vs './client'
+    // IMPACT: Works consistently across operating systems
+
+    /* Type Checking */
+    "strict": true,
+    // WHY: Maximum type safety (enables all strict flags)
+    // INCLUDES: strictNullChecks, strictFunctionTypes, etc.
+    // IMPACT: Catches bugs at compile time
+
+    /* Completeness */
+    "skipLibCheck": true
+    // WHY: Faster compilation
+    // WHAT IT DOES: Skips checking node_modules types
+    // IMPACT: Build speed improves, no impact on your code
+  },
+
+  /* File Inclusion */
+  "include": [
+    "src/**/*"
+    // WHY: Only compile source code
+    // PATTERN: ** matches any depth, * matches any file
+  ],
+
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tests",
+    "**/*.spec.ts"
+    // WHY: Don't compile dependencies or test files
+  ]
+}

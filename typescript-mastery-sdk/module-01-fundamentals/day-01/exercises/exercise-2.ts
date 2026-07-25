@@ -4,13 +4,13 @@
 console.log("=== Exercise 2: Type Inference ===\n");
 
 // TODO: Create 'phoneNumber' with value "+923001234567" (NO type annotation!)
-let phoneNumber = "_____";
+let phoneNumber = "+923001234567";
 
 // TODO: Create 'messageCount' with value 10 (NO type annotation!)
-let messageCount = _____;
+let messageCount = 10;
 
 // TODO: Create 'hasAccess' with value true (NO type annotation!)
-let hasAccess = _____;
+let hasAccess = true;
 
 // Print with types
 console.log("Phone:", phoneNumber, "| Type:", typeof phoneNumber);

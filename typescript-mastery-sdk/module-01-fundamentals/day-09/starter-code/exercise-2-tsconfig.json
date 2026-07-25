@@ -1,0 +1,51 @@
+{
+  "compilerOptions": {
+    // TODO: Fill in these compiler options for WhatsApp SDK
+
+    /* Language and Environment */
+    // TODO: Set target to ES2022 (for Node.js 18+ support)
+    "target": "",
+
+    /* Modules */
+    // TODO: Set module to ESNext (modern import/export)
+    "module": "",
+
+    // TODO: Set moduleResolution to node
+    "moduleResolution": "",
+
+    /* Emit */
+    // TODO: Set output directory to ./dist
+    "outDir": "",
+
+    // TODO: Set root directory to ./src
+    "rootDir": "",
+
+    // TODO: Enable declaration file generation (true/false?)
+    "declaration": false,
+
+    // TODO: Enable source maps (true/false?)
+    "sourceMap": false,
+
+    /* Interop Constraints */
+    // TODO: Enable esModuleInterop (true/false?)
+    "esModuleInterop": false,
+
+    // TODO: Force consistent casing in file names (true/false?)
+    "forceConsistentCasingInFileNames": false,
+
+    /* Type Checking */
+    // TODO: Enable strict mode (true/false?)
+    "strict": false,
+
+    /* Completeness */
+    // TODO: Skip lib check for faster builds (true/false?)
+    "skipLibCheck": false
+  },
+
+  /* File Inclusion */
+  // TODO: Include only src files
+  "include": [],
+
+  // TODO: Exclude node_modules, dist, and tests
+  "exclude": []
+}

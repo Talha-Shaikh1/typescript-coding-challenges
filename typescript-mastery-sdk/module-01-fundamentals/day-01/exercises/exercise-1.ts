@@ -4,16 +4,16 @@
 console.log("=== Exercise 1: Variable Declarations ===\n");
 
 // TODO: Declare variable 'myName' of type string with your name
-let myName: _____ = "Your Name Here";
+let myName: string = "Talha Shaikh";
 
 // TODO: Declare variable 'myAge' of type number with your age
-let myAge: _____ = 25;
+let myAge: number = 25;
 
 // TODO: Declare variable 'isLearning' of type boolean, set to true
-let isLearning: _____ = true;
+let isLearning: boolean = true;
 
 // TODO: Declare variable 'myCity' of type string with your city
-let myCity: _____ = "Your City";
+let myCity: string = "Karachi";
 
 // Print all values
 console.log("Name:", myName);

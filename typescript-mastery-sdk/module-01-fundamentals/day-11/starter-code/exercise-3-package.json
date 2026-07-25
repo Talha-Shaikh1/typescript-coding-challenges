@@ -1,0 +1,46 @@
+{
+  "name": "@whatsapp-sdk/core",
+  "version": "1.0.0",
+  "description": "WhatsApp SDK for Node.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    // TODO: Add development script
+    // Should watch for changes and recompile automatically
+    "dev": "",
+
+    // TODO: Add build script
+    // Should clean old files and compile fresh
+    "build": "",
+
+    // TODO: Add clean script
+    // Should remove dist/ folder
+    // Hint: Use rimraf for cross-platform compatibility
+    "clean": "",
+
+    // TODO: Add type check script
+    // Should validate types without generating output files
+    "typecheck": "",
+
+    // TODO: Add production build script
+    // Should run typecheck before building
+    "build:prod": ""
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "rimraf": "^5.0.0"
+  }
+}
+
+/**
+ * QUESTIONS:
+ *
+ * 1. Why use "rimraf" instead of "rm -rf"?
+ * (Your answer)
+ *
+ * 2. What's the difference between "dev" and "build" scripts?
+ * (Your answer)
+ *
+ * 3. Why have a separate "typecheck" script?
+ * (Your answer)
+ */

@@ -1,0 +1,71 @@
+{
+  "name": "@whatsapp-sdk/core",
+  "version": "1.0.0",
+  "description": "WhatsApp SDK for Node.js",
+
+  // TODO: Point to compiled JavaScript (what executes at runtime)
+  "main": "",
+
+  // TODO: Point to type definitions (what TypeScript reads)
+  "types": "",
+
+  // TODO: Modern exports configuration
+  "exports": {
+    ".": {
+      // TODO: ESM import path
+      "import": "",
+
+      // TODO: Type definitions path
+      "types": ""
+    }
+  },
+
+  // TODO: Files to include in npm package
+  // Should include dist/ but not src/
+  "files": [],
+
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
+
+/**
+ * QUESTIONS TO ANSWER:
+ *
+ * 1. What's the difference between "main" and "types"?
+ * Main: ___________________________________________________________
+ * Types: ___________________________________________________________
+ *
+ * 2. Why do we need the "exports" field?
+ * ___________________________________________________________
+ *
+ * 3. Should .d.ts files be in the "files" array?
+ * Answer: ___________
+ * Why: ___________________________________________________________
+ *
+ * 4. What happens if "types" field is missing?
+ * ___________________________________________________________
+ *
+ * 5. Should you include src/ in "files" array?
+ * Answer: ___________
+ * Why: ___________________________________________________________
+ */
+
+/**
+ * VERIFICATION:
+ *
+ * After completing, test:
+ * 1. npm pack --dry-run
+ *    - See what files would be included
+ * 2. Create test project, npm link
+ *    - Import your SDK
+ *    - Check if autocomplete works
+ * 3. Check TypeScript finds types:
+ *    - import { WhatsAppClient } from '@whatsapp-sdk/core';
+ *    - Should have full type support
+ */

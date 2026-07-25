@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "node",
+
+    // TODO: Add path mappings for WhatsApp SDK
+    // Requirements:
+    // 1. @client/* should map to src/client/*
+    // 2. @api/* should map to src/api/*
+    // 3. @services/* should map to src/services/*
+    // 4. @types/* should map to src/types/*
+    // 5. @utils/* should map to src/utils/*
+    // 6. @errors/* should map to src/errors/*
+    // 7. @test/* should map to tests/*
+
+    "baseUrl": ".",
+    "paths": {
+      // Add your path mappings here
+    }
+  },
+  "include": ["src/**/*", "tests/**/*"]
+}
