@@ -52,36 +52,47 @@ The SDK should eventually support:
 
 MY CURRENT LEVEL
 
-✅ **Week 1 COMPLETE:** TypeScript Fundamentals (Days 01-07)
-✅ **Week 2 COMPLETE:** Library Development Foundation (Days 08-14)
-✅ **Day 15 COMPLETE:** Generics Introduction
-✅ **Day 16 COMPLETE:** Generic Constraints
+✅ **Module 01 COMPLETE:** TypeScript Fundamentals (Week 01-02, Days 01-14)
+🚧 **Module 02 IN PROGRESS:** Advanced Types & Patterns (Week 03-04, 5/14 days complete)
 
 Already covered:
 
-**Week 1 - Fundamentals:**
+**Module 01 - TypeScript Fundamentals:**
+
+Week 01 (Days 01-07):
 - Variables & primitive types
 - Functions & arrow functions
 - Arrays & tuples
 - Objects & interfaces
 - Type annotations
 - Union & intersection types
-- Basic problem solving
+- Week practice & review
 
-**Week 2 - Library Development Foundation:**
-- Day 08: npm packages & package.json
-- Day 09: TypeScript configuration (tsconfig.json)
-- Day 10: Module systems & exports
-- Day 11: Build process & compilation
-- Day 12: Professional project structure
-- Day 13: Declaration files & type definitions
-- Day 14: Week 2 Practice Project (SDK Foundation)
+Week 02 (Days 08-14):
+- npm packages & package.json
+- TypeScript configuration (tsconfig.json)
+- Module systems & exports
+- Build process & compilation
+- Professional project structure
+- Declaration files & type definitions
+- SDK Foundation Project
 
-**Week 3 - Advanced Types (Started):**
-- Day 15: Generics Introduction (functions, interfaces, classes)
-- Day 16: Generic Constraints (extends, keyof, interface constraints)
+**Module 02 - Advanced Types & Patterns (5/14 days complete):**
 
-Current Status: Day 16 Complete - Ready for Day 17 (Utility Types - Part 1)
+Week 03 (Days 15-21) - 5/7 complete:
+- ✅ Day 15: Generics Introduction (functions, interfaces, classes)
+- ✅ Day 16: Generic Constraints (extends, keyof, interface constraints)
+- ✅ Day 17: Utility Types Part 1 (Partial, Pick, Omit, Record)
+- ✅ Day 18: Utility Types Part 2 (Required, Readonly, Exclude, Extract)
+- ✅ Day 19: Mapped Types (building custom utility types)
+- ⏳ Day 20: Conditional Types
+- ⏳ Day 21: Type Inference & Type Guards
+
+Week 04 (Days 22-28) - 0/7 complete:
+- All days pending
+
+Current Status: Module 02, Week 03, Day 19 Complete - Ready for Day 20 (Conditional Types)
+Progress: 19/112 days (16.96%)
 
 ==================================================
 
