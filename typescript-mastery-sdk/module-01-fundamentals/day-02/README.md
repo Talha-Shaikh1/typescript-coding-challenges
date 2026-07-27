@@ -75,8 +75,8 @@ cd ../../solutions/day-02
 
 ## ✅ Completion Checklist
 
-- [ ] Read complete LESSON.md
-- [ ] Ran all 4 examples
+- [✅] Read complete LESSON.md
+- [✅] Ran all 4 examples
 - [ ] Exercise 1: Type inference ✓
 - [ ] Exercise 2: String manipulation ✓
 - [ ] Exercise 3: Number operations ✓

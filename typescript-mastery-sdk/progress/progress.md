@@ -8,8 +8,8 @@
 
 ## 📅 Module 1: Fundamentals (Week 1-2)
 
-- [ ] Day 01: Setup & Configuration
-- [ ] Day 02: TypeScript Basics
+- [✅] Day 01: Setup & Configuration
+- [✅] Day 02: TypeScript Basics
 - [ ] Day 03: Basic Types - Part 1
 - [ ] Day 04: Basic Types - Part 2
 - [ ] Day 05: Functions - Part 1

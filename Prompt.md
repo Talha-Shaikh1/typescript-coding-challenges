@@ -54,6 +54,8 @@ MY CURRENT LEVEL
 
 ✅ **Week 1 COMPLETE:** TypeScript Fundamentals (Days 01-07)
 ✅ **Week 2 COMPLETE:** Library Development Foundation (Days 08-14)
+✅ **Day 15 COMPLETE:** Generics Introduction
+✅ **Day 16 COMPLETE:** Generic Constraints
 
 Already covered:
 
@@ -75,7 +77,11 @@ Already covered:
 - Day 13: Declaration files & type definitions
 - Day 14: Week 2 Practice Project (SDK Foundation)
 
-Current Status: Week 2 Complete - Ready for Week 3 (Advanced TypeScript)
+**Week 3 - Advanced Types (Started):**
+- Day 15: Generics Introduction (functions, interfaces, classes)
+- Day 16: Generic Constraints (extends, keyof, interface constraints)
+
+Current Status: Day 16 Complete - Ready for Day 17 (Utility Types - Part 1)
 
 ==================================================
 

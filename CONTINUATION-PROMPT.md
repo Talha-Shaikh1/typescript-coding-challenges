@@ -14,11 +14,14 @@ I'm building a production-ready WhatsApp SDK to master TypeScript.
 CURRENT PROGRESS:
 ✅ Week 1 Complete: TypeScript Fundamentals (Days 01-07)
 ✅ Week 2 Complete: Library Development Foundation (Days 08-14)
+✅ Day 15 Complete: Generics Introduction
+✅ Day 16 Complete: Generic Constraints
 
 COURSE STRUCTURE:
 - Module 1: TypeScript Fundamentals (16 weeks total)
 - Each week: 7 days of lessons, exercises, examples
-- Week 2 covered: npm, tsconfig, modules, build, structure, declarations
+- Week 1-2: Foundation complete
+- Week 3 (Days 15-21): Advanced Types & Patterns (2/7 days done)
 - Final Project: Production WhatsApp SDK
 
 TEACHING STYLE:
@@ -29,7 +32,7 @@ TEACHING STYLE:
 - Every concept connects to SDK development
 - Urdu + English mix for explanations
 
-Continue from Week 3 onwards, maintaining the same teaching quality and structure established in Week 2.
+Continue from Day 17 onwards (Utility Types - Part 1), maintaining the same teaching quality and structure established in previous days.
 ```
 
 ---
@@ -52,7 +55,21 @@ Continue from Week 3 onwards, maintaining the same teaching quality and structur
 - **Day 13:** Declaration files (.d.ts), type exports
 - **Day 14:** Complete SDK Foundation (practice project)
 
-**Output:** Professional npm package structure ready for features
+**Week 3 (Days 15-16):** Advanced Types - Started
+- **Day 15:** Generics Introduction
+  - Generic functions, interfaces, classes
+  - Type parameters and substitution
+  - Reusable, type-safe code
+  - SDK API response patterns
+- **Day 16:** Generic Constraints
+  - extends keyword for constraints
+  - Interface constraints (T extends Interface)
+  - keyof constraints for property access
+  - Multiple constraints with &
+  - Default type parameters
+  - Constrained repository patterns
+
+**Output:** Professional SDK foundation with type-safe generic services
 
 ---
 
@@ -90,20 +107,36 @@ day-XX/
 
 ---
 
-## Week 3 Preview (What's Next)
+## What's Next (Day 17 onwards)
 
-**Week 3-4: Advanced Types & Patterns**
+**Day 17-18: Utility Types**
 
 Topics to cover:
-1. Generics & type constraints
-2. Utility types (Partial, Pick, Omit, Record, etc.)
-3. Mapped types
-4. Conditional types
-5. Type inference
-6. Type guards & narrowing
-7. Discriminated unions
+1. Partial<T> - Make all properties optional
+2. Required<T> - Make all properties required
+3. Readonly<T> - Make all properties readonly
+4. Pick<T, K> - Select specific properties
+5. Omit<T, K> - Exclude specific properties
+6. Record<K, V> - Create object type with specific keys
+7. Exclude<T, U> - Exclude from union
+8. Extract<T, U> - Extract from union
 
-**SDK Application:** Type-safe service methods, generic API responses
+**SDK Application:** Optional configs, selective updates, immutable types
+
+**Day 19-20: Mapped & Conditional Types**
+
+Topics to cover:
+1. Mapped types: `{ [K in keyof T]: ... }`
+2. Conditional types: `T extends U ? X : Y`
+3. `infer` keyword
+4. Custom utility types
+5. Type transformations
+
+**SDK Application:** Dynamic type transformations, smart response types
+
+**Day 21: Practice Project**
+
+Integration of Days 15-20 concepts into SDK
 
 ---
 
@@ -205,10 +238,16 @@ analogies, and SDK connections. Create complete day structure."
 **Completed:**
 - ✅ Week 1: Days 01-07 (Fundamentals)
 - ✅ Week 2: Days 08-14 (Library Foundation)
+- ✅ Day 15: Generics Introduction
+- ✅ Day 16: Generic Constraints
 
 **Next:**
-- ⏳ Week 3: Days 15-21 (Advanced Types)
-- ⏳ Week 4: Days 22-28 (More Advanced Types)
+- ⏳ Day 17: Utility Types - Part 1 (Partial, Pick, Omit, Record)
+- ⏳ Day 18: Utility Types - Part 2 (Required, Readonly, Exclude, Extract)
+- ⏳ Day 19: Mapped Types
+- ⏳ Day 20: Conditional Types
+- ⏳ Day 21: Type Inference & Type Guards
+- ⏳ Days 22-28: More advanced patterns
 - ... (see complete outline in Prompt.md)
 
 ---
