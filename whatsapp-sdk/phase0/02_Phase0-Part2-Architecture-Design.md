@@ -3595,6 +3595,226 @@ Negative:
 
 ---
 
+# ADR-008 — Multi-Tenancy via Instance Isolation
+
+## Status
+
+Accepted
+
+---
+
+## Decision
+
+The SDK will support multi-tenant architectures through **instance isolation** rather than built-in tenant management.
+
+Developers create multiple independent `WhatsAppClient` instances, each with isolated configuration and state.
+
+The SDK provides **zero tenant-awareness**—it remains stateless and lets applications manage tenant orchestration.
+
+---
+
+## Context
+
+The SDK must support two deployment patterns:
+
+1. **Single-Tenant:** One business, one WhatsApp Business Account, simple integration
+2. **Multi-Tenant:** SaaS platforms (like BotAura) managing hundreds of customers, each with independent WhatsApp accounts
+
+Multi-tenancy is a **core requirement**, not a future add-on.
+
+Without proper design from the start, SaaS platforms would be forced to fork the SDK or build complex workarounds.
+
+---
+
+## Reason
+
+### Security by Design
+
+Instance isolation guarantees:
+
+- No shared state between tenants
+- Zero cross-tenant token leakage
+- Independent failure domains
+- No global variables or static state
+
+Each client instance is a completely independent object with its own configuration, HTTP client, retry state, and error handling.
+
+### Aligns with Existing Principles
+
+This decision reinforces:
+
+- **ADR-001 (Single Package):** No additional packages needed
+- **ADR-003 (Framework Agnostic):** Works in any architecture (serverless, monolith, microservices)
+- **ADR-004 (Dedicated HTTP Client):** Each instance creates its own HTTP client
+- **Simplicity Principle:** Single-tenant users see zero multi-tenant complexity
+
+### Flexibility
+
+Developers choose how to manage tenants:
+
+- In-memory Map (simple cases)
+- Redis (distributed systems)
+- Database (persistent storage)
+- Vault (security-sensitive)
+
+The SDK doesn't enforce storage or orchestration patterns.
+
+---
+
+## Alternatives Considered
+
+### Built-In Tenant Registry
+
+SDK provides `WhatsAppClientManager` with `registerTenant()` / `getClient()` methods.
+
+**Rejected because:**
+
+- Violates single responsibility principle (SDK manages WhatsApp API, not tenant lifecycle)
+- Forces storage assumptions (where do tenant configs live?)
+- Increases SDK complexity unnecessarily
+- Adds unused abstractions for single-tenant users
+- Couples SDK to specific orchestration patterns
+- Larger security surface area (centralized registry = bigger blast radius)
+- Harder to test and maintain
+
+### Shared HTTP Client with Per-Request Tokens
+
+Single HTTP client accepts token per request instead of per instance.
+
+**Rejected because:**
+
+- Race conditions in multi-threaded environments
+- Complex state management
+- Retry/rate-limit state becomes ambiguous
+- Violates instance isolation principle
+- Harder to reason about token flow
+
+---
+
+## Consequences
+
+### Positive
+
+- **Security:** Isolation guaranteed by object boundaries—impossible to leak state
+- **Simplicity:** SDK stays focused on WhatsApp API, not tenant management
+- **Flexibility:** Developers control tenant storage/orchestration
+- **Zero overhead for single-tenant:** No unused abstractions
+- **Framework agnostic:** Works everywhere
+- **Easy to reason about:** Standard OOP pattern
+- **Easy to test:** Each instance is independently testable
+
+### Negative
+
+- **Developer responsibility:** Multi-tenant apps must implement orchestration themselves
+- **Memory overhead:** Each instance consumes ~50-100 KB (acceptable for 1000s of tenants)
+- **No built-in helpers:** Developers write their own tenant registry (mitigated by documentation/examples)
+
+### Reconciliation with ADR-001
+
+ADR-001 states "avoid early complexity" and "single package first."
+
+This decision **reinforces** that principle:
+
+- No new packages needed
+- No complex tenant abstractions
+- Standard object instantiation pattern
+- Complexity deferred to application layer (where it belongs)
+
+Multi-tenant support is achieved through **absence of shared state**, not addition of features.
+
+---
+
+## Implementation Requirements
+
+### 1. No Shared State
+
+The SDK must avoid:
+
+- Static configuration variables
+- Global HTTP clients
+- Shared retry counters
+- Static rate limiters
+- Global caches
+
+### 2. Instance-Scoped Resources
+
+Each `WhatsAppClient` must own:
+
+- Configuration object
+- HTTP client instance
+- Retry state
+- Error handler
+- Logger (if configured)
+
+### 3. Documentation
+
+SDK documentation must include:
+
+- Multi-tenant architecture guide
+- Example implementations (Map, Redis, Database)
+- Security best practices
+- Memory benchmarks
+- Dynamic tenant loading patterns
+
+### 4. Testing
+
+Test suite must verify:
+
+- Token isolation between instances
+- Independent retry state
+- No cross-instance state leakage
+- Memory overhead benchmarks (1000 instances)
+
+---
+
+## Future Enhancements
+
+A separate **optional** package may provide convenience:
+
+```
+@whatsapp-sdk/multi-tenant
+```
+
+Features:
+
+- Pre-built tenant registry implementations
+- Redis/Database adapters
+- Dynamic tenant loading helpers
+- Tenant lifecycle utilities
+
+**Important:** Core SDK remains stateless. Multi-tenant package is a convenience layer, not a requirement.
+
+---
+
+## Decision Impact
+
+| Component | Change Required |
+|-----------|-----------------|
+| WhatsAppClient | Ensure all state is instance-scoped (already planned) |
+| HTTP Client | Per-instance creation (already planned) |
+| Configuration | Instance property, not static (already planned) |
+| Retry Logic | Instance-scoped state (design requirement) |
+| Rate Limiting | Future feature must be per-instance |
+| Caching | Future feature must be per-instance |
+| Documentation | Add multi-tenant guide (new requirement) |
+| Testing | Add isolation tests (new requirement) |
+
+Most requirements already align with existing architecture—this ADR makes the constraint explicit and adds documentation/testing requirements.
+
+---
+
+## Success Criteria
+
+Multi-tenancy support is complete when:
+
+- ✅ Multiple client instances coexist without interference
+- ✅ No shared state exists in codebase
+- ✅ Test suite verifies isolation
+- ✅ Documentation includes multi-tenant patterns
+- ✅ Memory overhead benchmarked and acceptable
+
+---
+
 # ADR Summary
 
 Current architectural decisions:
@@ -3608,6 +3828,7 @@ Current architectural decisions:
 | Error Handling | Custom Error System |
 | Documentation | Required |
 | Future Growth | Possible Monorepo |
+| Multi-Tenancy | Instance Isolation |
 
 ---
 
