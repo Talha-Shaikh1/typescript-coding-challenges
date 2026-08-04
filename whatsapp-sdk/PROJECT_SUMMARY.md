@@ -59,9 +59,19 @@
 - Signature verification
 - Payload parsing
 - Typed event models (incoming messages, status updates)
+- Tenant routing (multi-tenant webhook handling)
+
+### Multi-Tenancy
+- Factory pattern with `createClient(tenant)` function
+- `Tenant` interface for tenant configuration
+- `TenantStore` interface for tenant storage
+- Webhook routing via phone number resolution
+- Per-tenant rate limiting (80 messages/minute per tenant)
+- Per-tenant retry logic (independent state)
+- Complete instance isolation
 
 ### Developer Experience
-- WhatsAppClient (single entry point)
+- Factory function as single entry point (`createClient`)
 - Full TypeScript support with IntelliSense
 - Phone number utilities (validation, normalization)
 - Structured error handling (custom error classes)
@@ -71,7 +81,7 @@
 - Unit tests
 - CI pipeline
 - Semantic versioning
-- Published to npm as `@whatsapp-sdk/core`
+- Published to npm as `wasync`
 
 ### Explicitly Out of Scope (v0.1.0)
 - Interactive messages
@@ -89,27 +99,37 @@
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | **Language** | TypeScript | Strong typing improves DX, catches errors at compile time, better autocomplete |
-| **Initial Structure** | Single package (`@whatsapp-sdk/core`) | Avoid early complexity; migrate to monorepo only when ecosystem needs appear |
+| **Package Name** | `wasync` | Short, memorable, WhatsApp async operations focus |
+| **Initial Structure** | Single package (`wasync`) | Avoid early complexity; migrate to monorepo only when ecosystem needs appear |
 | **Core Design** | Framework agnostic | Must work with Express, Next.js, NestJS, Fastify, plain Node.js—no framework dependencies in core |
+| **Multi-Tenancy** | Factory pattern with Tenant/TenantStore interfaces | Explicit tenant context, webhook routing support, complete isolation, clear conventions |
+| **Client Creation** | `createClient(tenant)` factory function | Validates configuration, establishes conventions, future-proof for dependency injection |
 | **Architecture Pattern** | Layered (Application → Client → Services → HTTP → Meta API) | Clear separation of concerns, single responsibility per layer |
-| **HTTP Communication** | Dedicated HTTP Client layer | Centralized networking logic prevents duplication across services |
+| **HTTP Communication** | Dedicated HTTP Client layer (per-instance) | Centralized networking logic prevents duplication, ensures per-tenant isolation |
+| **Rate Limiting** | Per-tenant token bucket (80 msg/min per tenant) | Independent quotas, no cross-tenant impact, aligns with Meta's per-phone-number limits |
+| **Retry Logic** | Per-tenant exponential backoff (max 3 retries) | Independent retry state, no cross-tenant impact, predictable behavior |
 | **Error Handling** | Custom typed error system | Convert raw Meta API errors into meaningful SDK errors (e.g., `AuthenticationError`, `RateLimitError`) |
+| **Webhook Handling** | Core SDK provides routing utilities | `routeWebhook()` resolves tenants via `TenantStore.getByPhoneNumberId()`, framework-agnostic |
 | **Dependencies** | Minimal | Prefer native platform features (fetch, URL, crypto) over third-party libraries |
 | **Documentation** | Required before release | Every public feature must have docs—not an afterthought |
 | **API Design Philosophy** | Composition over inheritance | Avoid deep class hierarchies; favor modular services |
 
 ### Request Lifecycle (All Requests Follow Same Pipeline)
 ```
-Application → WhatsAppClient → Service → Validation → Request Builder → 
+Application → createClient(tenant) → WhatsAppClient → Service → Validation → Request Builder → 
 Configuration → Authentication → HTTP Client → Meta API → 
 Response Parser → Error Mapper → Typed Response → Application
 ```
 
 ### Component Responsibilities
-- **WhatsAppClient:** Single entry point, manages configuration, initializes services
+- **createClient Factory:** Validates tenant config, creates isolated WhatsApp client instances
+- **WhatsAppClient:** Single entry point per tenant, manages configuration, initializes services
+- **Tenant Management:** Interfaces (`Tenant`, `TenantStore`) for multi-tenant support, webhook routing
 - **Services:** Business logic (MessageService, MediaService, WebhookService)—validate inputs, prepare requests, transform responses
-- **HTTP Client:** All Meta communication, authentication headers, retry logic, error normalization
-- **Configuration Manager:** Single source of truth for config, validates on startup (fail fast)
+- **HTTP Client:** All Meta communication (per-tenant instances), authentication headers, retry logic, error normalization
+- **Configuration Manager:** Single source of truth for tenant config, validates on client creation (fail fast)
+- **Rate Limiter:** Per-tenant token bucket (80 msg/min), queues requests if limit hit
+- **Retry Handler:** Per-tenant exponential backoff (max 3 retries), independent state
 
 ---
 
@@ -118,6 +138,7 @@ Response Parser → Error Mapper → Typed Response → Application
 ### Core
 - **Runtime:** Node.js (LTS versions)
 - **Language:** TypeScript
+- **Package Name:** `wasync`
 - **HTTP:** Native fetch API (Node.js 18+)
 - **Testing:** (Not specified in docs—likely Jest or Vitest)
 - **Build:** (Not specified—likely tsc + bundler)
@@ -133,10 +154,11 @@ Response Parser → Error Mapper → Typed Response → Application
 
 ### Future Expansion (Not Initial Release)
 - Monorepo with separate packages:
-  - `@whatsapp-sdk/core`
+  - `wasync` (core)
   - `@whatsapp-sdk/express`
   - `@whatsapp-sdk/next`
   - `@whatsapp-sdk/nest`
+  - `@whatsapp-sdk/multi-tenant` (convenience implementations)
   - `@whatsapp-sdk/cli`
   - `@whatsapp-sdk/testing`
 
@@ -174,12 +196,14 @@ Response Parser → Error Mapper → Typed Response → Application
 **This project's unique philosophy:**
 - **Developer Experience First:** Intuitive, predictable APIs over feature completeness
 - **Production-First Design:** Reliability, error handling, testing as first-class citizens (not optional)
+- **Multi-Tenant from Day One:** Factory pattern with explicit tenant interfaces, webhook routing, complete isolation
 - **Modular Architecture:** Clean separation enabling independent evolution
 - **Long-Term Maintainability:** Consistent patterns over rapid feature growth
 - **Community-Driven Development:** Open governance, transparent roadmap
 - **Excellent Documentation:** Docs as part of the feature, not an afterthought
+- **Clear Conventions:** `Tenant` and `TenantStore` interfaces establish ecosystem standards
 
-**Positioning:** Not a replacement for existing SDKs—a different engineering philosophy serving different developer needs. Multiple SDKs can coexist while serving different audiences.
+**Positioning:** Not a replacement for existing SDKs—a different engineering philosophy serving different developer needs (especially SaaS platforms requiring multi-tenancy). Multiple SDKs can coexist while serving different audiences.
 
 ---
 

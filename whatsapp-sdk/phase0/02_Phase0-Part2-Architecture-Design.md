@@ -121,25 +121,32 @@ The application always controls the SDK.
 
 ## WhatsAppClient
 
-The WhatsAppClient is the public entry point of the SDK.
+The WhatsAppClient is created via a factory function and represents a single tenant's WhatsApp integration.
 
 Responsibilities:
 
-- Store configuration
-- Initialize services
+- Store tenant-specific configuration
+- Initialize services with tenant context
 - Validate configuration
 - Provide a simple API
 - Coordinate internal components
+- Maintain isolated state per tenant
 
-Developers should only need one client instance.
+Multi-tenant applications create multiple client instances via the factory pattern.
 
 Example:
 
 ```ts
-const client = new WhatsAppClient({
-  accessToken,
-  phoneNumberId
-})
+import { createClient, Tenant } from 'wasync';
+
+const tenant: Tenant = {
+  id: 'tenant-123',
+  phoneNumberId: '1234567890',
+  accessToken: 'EAAxxxxx',
+  webhookSecret: 'secret123'
+};
+
+const client = createClient(tenant);
 ```
 
 ---
@@ -1076,15 +1083,21 @@ Configuration should be initialized only once during client creation.
 
 ## Initial Configuration
 
-The first release of the SDK requires only a minimal configuration.
+The SDK uses a factory pattern with tenant-based configuration.
 
 Example:
 
 ```ts
-const client = new WhatsAppClient({
-  accessToken: "...",
-  phoneNumberId: "...",
-})
+import { createClient, Tenant } from 'wasync';
+
+const tenant: Tenant = {
+  id: 'tenant-123',
+  phoneNumberId: '1234567890',
+  accessToken: 'EAAxxxxx',
+  webhookSecret: 'secret123' // optional
+};
+
+const client = createClient(tenant);
 ```
 
 Future releases may support additional options while remaining backward compatible.
@@ -1111,10 +1124,11 @@ These options should remain optional unless required for correct SDK operation.
 
 ## Validation Rules
 
-Configuration validation occurs during SDK initialization.
+Configuration validation occurs during client creation.
 
 Examples of validation include:
 
+- Tenant ID must be provided.
 - Access Token must be provided.
 - Phone Number ID must be provided.
 - Configuration values must have valid types.
@@ -1755,7 +1769,512 @@ By centralizing request processing, the SDK ensures consistent behavior, easier 
 
 ---
 
-# 2.5 Package Responsibilities
+# 2.4.9 Tenant Management
+
+## Purpose
+
+Tenant Management defines the interfaces and patterns for multi-tenant WhatsApp integrations.
+
+The SDK provides **interfaces only**—developers implement storage and orchestration.
+
+This keeps the SDK simple while enabling SaaS platforms to manage hundreds of independent WhatsApp accounts.
+
+---
+
+## Tenant Interface
+
+The `Tenant` interface defines the structure of tenant configuration:
+
+```ts
+interface Tenant {
+  id: string;                    // Unique tenant identifier
+  phoneNumberId: string;         // WhatsApp Business phone number ID
+  accessToken: string;           // Meta access token
+  webhookSecret?: string;        // Optional webhook verification secret
+}
+```
+
+### Field Descriptions
+
+**id**
+- Unique identifier for the tenant
+- Used for tenant lookup and management
+- Application-defined (UUID, database ID, etc.)
+
+**phoneNumberId**
+- WhatsApp Business phone number ID from Meta
+- Used for API requests
+- Used for webhook routing (incoming webhooks include this ID)
+
+**accessToken**
+- Meta Graph API access token
+- Can be temporary or permanent token
+- Used for authentication in all API requests
+
+**webhookSecret** (optional)
+- Secret key for webhook signature verification
+- Used to verify webhook authenticity
+- Optional—if omitted, signature verification is skipped
+
+---
+
+## TenantStore Interface
+
+The `TenantStore` interface defines how tenants are stored and retrieved:
+
+```ts
+interface TenantStore {
+  get(tenantId: string): Promise<Tenant | null>;
+  getByPhoneNumberId(phoneNumberId: string): Promise<Tenant | null>;
+  set(tenant: Tenant): Promise<void>;
+  delete(tenantId: string): Promise<void>;
+}
+```
+
+### Method Descriptions
+
+**get(tenantId)**
+- Retrieve tenant by ID
+- Returns `null` if tenant not found
+- Used for application-initiated operations
+
+**getByPhoneNumberId(phoneNumberId)**
+- Retrieve tenant by WhatsApp phone number ID
+- Returns `null` if tenant not found
+- Used for webhook routing (resolve which tenant owns this phone number)
+
+**set(tenant)**
+- Store or update a tenant
+- Should handle both create and update
+- Async operation (database, Redis, etc.)
+
+**delete(tenantId)**
+- Remove a tenant
+- Should cleanup all associated data
+- Async operation
+
+---
+
+## Factory Function
+
+The SDK exports a factory function for creating client instances:
+
+```ts
+function createClient(tenant: Tenant): WhatsAppClient {
+  // Validate tenant configuration
+  if (!tenant.id) throw new Error('Tenant ID required');
+  if (!tenant.phoneNumberId) throw new Error('Phone Number ID required');
+  if (!tenant.accessToken) throw new Error('Access Token required');
+  
+  // Create isolated client instance
+  return new WhatsAppClient(tenant);
+}
+```
+
+Usage:
+
+```ts
+import { createClient, Tenant } from 'wasync';
+
+const tenant: Tenant = {
+  id: 'tenant-123',
+  phoneNumberId: '1234567890',
+  accessToken: 'EAAxxxxx',
+  webhookSecret: 'secret123'
+};
+
+const client = createClient(tenant);
+await client.messages.sendText({ to: '923001234567', text: 'Hello' });
+```
+
+---
+
+## Implementation Examples
+
+### In-Memory TenantStore
+
+Simple implementation for single-server deployments:
+
+```ts
+import { TenantStore, Tenant } from 'wasync';
+
+export class InMemoryTenantStore implements TenantStore {
+  private tenants = new Map<string, Tenant>();
+  private phoneNumberIndex = new Map<string, string>(); // phoneNumberId -> tenantId
+
+  async get(tenantId: string): Promise<Tenant | null> {
+    return this.tenants.get(tenantId) || null;
+  }
+
+  async getByPhoneNumberId(phoneNumberId: string): Promise<Tenant | null> {
+    const tenantId = this.phoneNumberIndex.get(phoneNumberId);
+    return tenantId ? this.tenants.get(tenantId) || null : null;
+  }
+
+  async set(tenant: Tenant): Promise<void> {
+    this.tenants.set(tenant.id, tenant);
+    this.phoneNumberIndex.set(tenant.phoneNumberId, tenant.id);
+  }
+
+  async delete(tenantId: string): Promise<void> {
+    const tenant = this.tenants.get(tenantId);
+    if (tenant) {
+      this.phoneNumberIndex.delete(tenant.phoneNumberId);
+      this.tenants.delete(tenantId);
+    }
+  }
+}
+```
+
+### Redis TenantStore
+
+Distributed implementation for multi-server deployments:
+
+```ts
+import { TenantStore, Tenant } from 'wasync';
+import Redis from 'ioredis';
+
+export class RedisTenantStore implements TenantStore {
+  constructor(private redis: Redis) {}
+
+  async get(tenantId: string): Promise<Tenant | null> {
+    const data = await this.redis.get(`tenant:${tenantId}`);
+    return data ? JSON.parse(data) : null;
+  }
+
+  async getByPhoneNumberId(phoneNumberId: string): Promise<Tenant | null> {
+    const tenantId = await this.redis.get(`phone:${phoneNumberId}`);
+    return tenantId ? this.get(tenantId) : null;
+  }
+
+  async set(tenant: Tenant): Promise<void> {
+    await this.redis.set(`tenant:${tenant.id}`, JSON.stringify(tenant));
+    await this.redis.set(`phone:${tenant.phoneNumberId}`, tenant.id);
+  }
+
+  async delete(tenantId: string): Promise<void> {
+    const tenant = await this.get(tenantId);
+    if (tenant) {
+      await this.redis.del(`tenant:${tenantId}`);
+      await this.redis.del(`phone:${tenant.phoneNumberId}`);
+    }
+  }
+}
+```
+
+### Database TenantStore
+
+Persistent implementation:
+
+```ts
+import { TenantStore, Tenant } from 'wasync';
+import { Database } from './database';
+
+export class DatabaseTenantStore implements TenantStore {
+  constructor(private db: Database) {}
+
+  async get(tenantId: string): Promise<Tenant | null> {
+    const row = await this.db.query(
+      'SELECT * FROM tenants WHERE id = $1',
+      [tenantId]
+    );
+    return row ? this.mapToTenant(row) : null;
+  }
+
+  async getByPhoneNumberId(phoneNumberId: string): Promise<Tenant | null> {
+    const row = await this.db.query(
+      'SELECT * FROM tenants WHERE phone_number_id = $1',
+      [phoneNumberId]
+    );
+    return row ? this.mapToTenant(row) : null;
+  }
+
+  async set(tenant: Tenant): Promise<void> {
+    await this.db.query(
+      `INSERT INTO tenants (id, phone_number_id, access_token, webhook_secret)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (id) DO UPDATE SET
+         phone_number_id = $2,
+         access_token = $3,
+         webhook_secret = $4`,
+      [tenant.id, tenant.phoneNumberId, tenant.accessToken, tenant.webhookSecret]
+    );
+  }
+
+  async delete(tenantId: string): Promise<void> {
+    await this.db.query('DELETE FROM tenants WHERE id = $1', [tenantId]);
+  }
+
+  private mapToTenant(row: any): Tenant {
+    return {
+      id: row.id,
+      phoneNumberId: row.phone_number_id,
+      accessToken: row.access_token,
+      webhookSecret: row.webhook_secret || undefined,
+    };
+  }
+}
+```
+
+---
+
+## Webhook Routing
+
+The SDK provides a webhook routing utility that uses `TenantStore`:
+
+```ts
+import { routeWebhook, TenantStore, createClient } from 'wasync';
+
+async function handleWebhook(
+  rawBody: string,
+  signature: string,
+  store: TenantStore
+) {
+  await routeWebhook(rawBody, signature, store);
+}
+```
+
+**How it works:**
+
+1. Parse webhook payload to extract `phone_number_id`
+2. Use `store.getByPhoneNumberId(phoneNumberId)` to resolve tenant
+3. If tenant not found → return silently (200 OK), log dead letter
+4. Verify signature using `tenant.webhookSecret`
+5. Create client instance: `createClient(tenant)`
+6. Parse and dispatch webhook events to handlers
+
+---
+
+## Security Considerations
+
+### Token Isolation
+
+Each client instance stores its own `accessToken`:
+
+```ts
+const clientA = createClient({ id: 'a', phoneNumberId: '111', accessToken: 'TOKEN_A' });
+const clientB = createClient({ id: 'b', phoneNumberId: '222', accessToken: 'TOKEN_B' });
+
+// TOKEN_A and TOKEN_B are completely isolated
+// No shared state between instances
+```
+
+### Webhook Secret Protection
+
+Webhook secrets should never be logged or exposed:
+
+```ts
+// ❌ WRONG
+console.log('Tenant:', tenant);
+
+// ✅ CORRECT
+console.log('Tenant:', { id: tenant.id, phoneNumberId: tenant.phoneNumberId });
+```
+
+### TenantStore Security
+
+Implementations should:
+- Encrypt tokens at rest
+- Use secure connections (TLS for Redis, SSL for databases)
+- Implement access control
+- Audit tenant access logs
+- Rotate tokens regularly
+
+---
+
+## Per-Tenant Rate Limiting
+
+Each client instance maintains its own rate limiter:
+
+```ts
+class WhatsAppClient {
+  private rateLimiter: RateLimiter;
+
+  constructor(tenant: Tenant) {
+    this.rateLimiter = new RateLimiter({
+      capacity: 80,        // 80 messages per minute
+      refillRate: 80/60,   // tokens per second
+    });
+  }
+}
+```
+
+**Token Bucket Algorithm:**
+
+- Each tenant has independent quota
+- Default: 80 messages/minute (Meta's limit)
+- Requests queue if limit exceeded
+- No cross-tenant impact
+
+---
+
+## Per-Tenant Retry Logic
+
+Each client instance maintains independent retry state:
+
+```ts
+class WhatsAppClient {
+  private retryState = new Map<string, number>(); // requestId -> attempt count
+
+  async sendWithRetry(request: any) {
+    const maxRetries = 3;
+    const requestId = generateId();
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await this.httpClient.send(request);
+      } catch (error) {
+        if (!this.shouldRetry(error) || attempt === maxRetries) {
+          throw error;
+        }
+        
+        const delay = Math.pow(2, attempt) * 1000; // exponential backoff
+        await sleep(delay);
+      }
+    }
+  }
+  
+  private shouldRetry(error: any): boolean {
+    // Retry on: network errors, 5xx, 429
+    // Do NOT retry on: 4xx (except 429), auth errors
+    return error.isNetworkError || 
+           error.statusCode >= 500 || 
+           error.statusCode === 429;
+  }
+}
+```
+
+---
+
+## Single-Tenant Simplicity
+
+For single-tenant applications, the pattern remains simple:
+
+```ts
+import { createClient, Tenant } from 'wasync';
+
+const tenant: Tenant = {
+  id: 'my-business',
+  phoneNumberId: process.env.PHONE_NUMBER_ID!,
+  accessToken: process.env.ACCESS_TOKEN!,
+};
+
+const client = createClient(tenant);
+
+// Use normally
+await client.messages.sendText({ to: '923001234567', text: 'Hello' });
+```
+
+No `TenantStore` needed for single-tenant apps.
+
+---
+
+## Multi-Tenant Service Example
+
+Complete multi-tenant service implementation:
+
+```ts
+import { createClient, TenantStore, Tenant } from 'wasync';
+
+export class WhatsAppService {
+  private clients = new Map<string, any>();
+
+  constructor(private store: TenantStore) {}
+
+  async getClient(tenantId: string) {
+    // Check cache
+    if (this.clients.has(tenantId)) {
+      return this.clients.get(tenantId);
+    }
+
+    // Load tenant
+    const tenant = await this.store.get(tenantId);
+    if (!tenant) {
+      throw new Error(`Tenant ${tenantId} not found`);
+    }
+
+    // Create and cache client
+    const client = createClient(tenant);
+    this.clients.set(tenantId, client);
+    return client;
+  }
+
+  async sendText(tenantId: string, to: string, text: string) {
+    const client = await this.getClient(tenantId);
+    return await client.messages.sendText({ to, text });
+  }
+
+  async handleWebhook(rawBody: string, signature: string) {
+    const payload = JSON.parse(rawBody);
+    const phoneNumberId = payload.entry[0].changes[0].value.metadata.phone_number_id;
+    
+    const tenant = await this.store.getByPhoneNumberId(phoneNumberId);
+    if (!tenant) {
+      console.warn('Webhook for unknown phone number:', phoneNumberId);
+      return;
+    }
+
+    const client = await this.getClient(tenant.id);
+    // Process webhook with client
+  }
+}
+```
+
+---
+
+## Design Rules
+
+Tenant Management must:
+
+- Define interfaces only (no implementations)
+- Remain storage-agnostic
+- Support both single-tenant and multi-tenant
+- Enforce complete isolation
+- Enable webhook routing
+- Support dynamic tenant loading
+- Be framework agnostic
+
+---
+
+## Testing Requirements
+
+Test suite must verify:
+
+```ts
+describe('Tenant Management', () => {
+  it('should isolate tokens between tenants', () => {
+    const clientA = createClient(tenantA);
+    const clientB = createClient(tenantB);
+    // Verify no token leakage
+  });
+
+  it('should route webhooks to correct tenant', async () => {
+    const store = new InMemoryTenantStore();
+    await store.set(tenant);
+    // Verify webhook routing
+  });
+
+  it('should handle missing tenant gracefully', async () => {
+    // Verify dead letter handling
+  });
+});
+```
+
+---
+
+## Summary
+
+Tenant Management provides the foundation for multi-tenant WhatsApp integrations.
+
+By defining clear interfaces (`Tenant`, `TenantStore`) and a factory pattern (`createClient`), the SDK remains simple while enabling SaaS platforms to scale.
+
+The SDK provides the structure—developers provide the storage.
+
+---
+
+**Next Section**
+
+2.5 Package Responsibilities
 
 ## Purpose
 
@@ -1801,7 +2320,7 @@ whatsapp-sdk/
 
 ---
 
-# Package 1 — @whatsapp-sdk/core
+# Package 1 — wasync
 
 ## Purpose
 
@@ -1816,11 +2335,13 @@ Every other package depends on core.
 Core handles:
 
 - WhatsApp API communication
-- Client initialization
+- Client initialization via factory pattern
+- Tenant management interfaces
 - Message sending
 - Media handling
 - Template management
-- Webhook utilities
+- Webhook utilities (including tenant routing)
+- Per-tenant rate limiting
 - Error handling
 - Type definitions
 - Internal utilities
@@ -1862,7 +2383,7 @@ Example:
 ```ts
 app.use(
   whatsappWebhook({
-    client
+    store: tenantStore
   })
 )
 ```
@@ -1876,7 +2397,7 @@ express
 
 ↓
 
-@whatsapp-sdk/core
+wasync
 ```
 
 Express package depends on core.
@@ -1918,7 +2439,7 @@ next
 
 ↓
 
-@whatsapp-sdk/core
+wasync
 ```
 
 ---
@@ -1949,7 +2470,7 @@ nestjs
 
 ↓
 
-@whatsapp-sdk/core
+wasync
 ```
 
 ---
@@ -2030,7 +2551,7 @@ testing
 
         ↓
 
-      core
+      wasync
 ```
 
 Core is the foundation.
@@ -2067,14 +2588,14 @@ All official packages follow:
 Examples:
 
 ```text
-@whatsapp-sdk/core
+wasync (core package)
 
 @whatsapp-sdk/express
 
 @whatsapp-sdk/next
 ```
 
-Naming should remain consistent across the ecosystem.
+The core package uses the simplified name `wasync`, while framework integrations maintain the namespace.
 
 ---
 
@@ -2206,8 +2727,8 @@ Allowed:
 
 ```ts
 import {
- WhatsAppClient
-} from "@whatsapp-sdk/core"
+ createClient
+} from "wasync"
 ```
 
 Not allowed:
@@ -2215,7 +2736,7 @@ Not allowed:
 ```ts
 import {
  InternalHttpClient
-} from "@whatsapp-sdk/core/src/internal/http"
+} from "wasync/src/internal/http"
 ```
 
 Internal implementation details should remain private.
@@ -3239,7 +3760,7 @@ The goal is to:
 Initial package:
 
 ```text
-@whatsapp-sdk/core
+wasync
 
 
 ---
@@ -3595,7 +4116,7 @@ Negative:
 
 ---
 
-# ADR-008 — Multi-Tenancy via Instance Isolation
+# ADR-008 — Multi-Tenancy via Factory Pattern
 
 ## Status
 
@@ -3605,11 +4126,17 @@ Accepted
 
 ## Decision
 
-The SDK will support multi-tenant architectures through **instance isolation** rather than built-in tenant management.
+The SDK will support multi-tenant architectures through a **factory pattern** with explicit tenant management.
 
-Developers create multiple independent `WhatsAppClient` instances, each with isolated configuration and state.
+Developers use `createClient(tenant)` instead of `new WhatsAppClient(config)` to create isolated client instances.
 
-The SDK provides **zero tenant-awareness**—it remains stateless and lets applications manage tenant orchestration.
+The SDK provides:
+- `Tenant` interface for tenant configuration
+- `TenantStore` interface for tenant storage/retrieval
+- `createClient(tenant)` factory function
+- Webhook routing via tenant resolution
+
+The SDK enforces **complete isolation** between tenants through instance-scoped state.
 
 ---
 
@@ -3618,7 +4145,7 @@ The SDK provides **zero tenant-awareness**—it remains stateless and lets appli
 The SDK must support two deployment patterns:
 
 1. **Single-Tenant:** One business, one WhatsApp Business Account, simple integration
-2. **Multi-Tenant:** SaaS platforms (like BotAura) managing hundreds of customers, each with independent WhatsApp accounts
+2. **Multi-Tenant:** SaaS platforms managing hundreds of customers, each with independent WhatsApp accounts
 
 Multi-tenancy is a **core requirement**, not a future add-on.
 
@@ -3630,38 +4157,99 @@ Without proper design from the start, SaaS platforms would be forced to fork the
 
 ### Security by Design
 
-Instance isolation guarantees:
+Factory pattern with tenant objects guarantees:
 
 - No shared state between tenants
 - Zero cross-tenant token leakage
 - Independent failure domains
+- Explicit tenant context in all operations
 - No global variables or static state
 
 Each client instance is a completely independent object with its own configuration, HTTP client, retry state, and error handling.
+
+### Clear Tenant Context
+
+The factory pattern makes tenant context explicit:
+
+```ts
+const tenant: Tenant = {
+  id: 'tenant-123',
+  phoneNumberId: '1234567890',
+  accessToken: 'EAAxxxxx',
+  webhookSecret: 'secret123'
+};
+
+const client = createClient(tenant);
+```
+
+This is clearer than:
+```ts
+const client = new WhatsAppClient({ accessToken, phoneNumberId }); // Which tenant?
+```
+
+### Webhook Routing Support
+
+The `Tenant` interface includes `phoneNumberId`, enabling webhook routing:
+
+```ts
+async function routeWebhook(
+  rawBody: string,
+  signature: string,
+  store: TenantStore
+): Promise<void> {
+  const payload = JSON.parse(rawBody);
+  const phoneNumberId = payload.entry[0].changes[0].value.metadata.phone_number_id;
+  
+  const tenant = await store.getByPhoneNumberId(phoneNumberId);
+  if (!tenant) {
+    // Dead letter - tenant not found
+    return;
+  }
+  
+  // Verify signature using tenant's webhookSecret
+  const isValid = verifySignature(rawBody, signature, tenant.webhookSecret);
+  if (!isValid) throw new Error('Invalid signature');
+  
+  // Process webhook for this tenant
+  const client = createClient(tenant);
+  // ... handle webhook events
+}
+```
 
 ### Aligns with Existing Principles
 
 This decision reinforces:
 
 - **ADR-001 (Single Package):** No additional packages needed
-- **ADR-003 (Framework Agnostic):** Works in any architecture (serverless, monolith, microservices)
+- **ADR-003 (Framework Agnostic):** Works in any architecture
 - **ADR-004 (Dedicated HTTP Client):** Each instance creates its own HTTP client
-- **Simplicity Principle:** Single-tenant users see zero multi-tenant complexity
+- **Simplicity Principle:** Clear and explicit
 
 ### Flexibility
 
-Developers choose how to manage tenants:
+Developers choose how to implement `TenantStore`:
 
 - In-memory Map (simple cases)
 - Redis (distributed systems)
 - Database (persistent storage)
 - Vault (security-sensitive)
 
-The SDK doesn't enforce storage or orchestration patterns.
+The SDK provides the interface, developers provide the implementation.
 
 ---
 
 ## Alternatives Considered
+
+### Constructor Pattern Only
+
+Use `new WhatsAppClient(config)` without factory function.
+
+**Rejected because:**
+
+- No standard way to resolve tenants from webhooks
+- Less clear tenant context
+- No interface definition for tenant structure
+- Harder to establish conventions
 
 ### Built-In Tenant Registry
 
@@ -3669,25 +4257,12 @@ SDK provides `WhatsAppClientManager` with `registerTenant()` / `getClient()` met
 
 **Rejected because:**
 
-- Violates single responsibility principle (SDK manages WhatsApp API, not tenant lifecycle)
-- Forces storage assumptions (where do tenant configs live?)
+- Violates single responsibility principle
+- Forces storage assumptions
 - Increases SDK complexity unnecessarily
 - Adds unused abstractions for single-tenant users
 - Couples SDK to specific orchestration patterns
-- Larger security surface area (centralized registry = bigger blast radius)
-- Harder to test and maintain
-
-### Shared HTTP Client with Per-Request Tokens
-
-Single HTTP client accepts token per request instead of per instance.
-
-**Rejected because:**
-
-- Race conditions in multi-threaded environments
-- Complex state management
-- Retry/rate-limit state becomes ambiguous
-- Violates instance isolation principle
-- Harder to reason about token flow
+- Larger security surface area
 
 ---
 
@@ -3695,19 +4270,20 @@ Single HTTP client accepts token per request instead of per instance.
 
 ### Positive
 
-- **Security:** Isolation guaranteed by object boundaries—impossible to leak state
-- **Simplicity:** SDK stays focused on WhatsApp API, not tenant management
-- **Flexibility:** Developers control tenant storage/orchestration
-- **Zero overhead for single-tenant:** No unused abstractions
+- **Security:** Isolation guaranteed by factory pattern and object boundaries
+- **Simplicity:** Clear interfaces, explicit tenant context
+- **Flexibility:** Developers control tenant storage
+- **Webhook Support:** Built-in tenant resolution pattern
+- **Zero overhead for single-tenant:** Factory pattern works for one tenant too
 - **Framework agnostic:** Works everywhere
-- **Easy to reason about:** Standard OOP pattern
-- **Easy to test:** Each instance is independently testable
+- **Easy to reason about:** Standard factory pattern
+- **Easy to test:** Each instance independently testable
 
 ### Negative
 
-- **Developer responsibility:** Multi-tenant apps must implement orchestration themselves
-- **Memory overhead:** Each instance consumes ~50-100 KB (acceptable for 1000s of tenants)
-- **No built-in helpers:** Developers write their own tenant registry (mitigated by documentation/examples)
+- **Developer responsibility:** Must implement `TenantStore` interface
+- **Memory overhead:** Each instance consumes ~50-100 KB (acceptable)
+- **Breaking change from typical patterns:** Factory instead of constructor
 
 ### Reconciliation with ADR-001
 
@@ -3716,17 +4292,51 @@ ADR-001 states "avoid early complexity" and "single package first."
 This decision **reinforces** that principle:
 
 - No new packages needed
-- No complex tenant abstractions
-- Standard object instantiation pattern
+- Clear interface definitions
+- Standard factory pattern
 - Complexity deferred to application layer (where it belongs)
 
-Multi-tenant support is achieved through **absence of shared state**, not addition of features.
+Multi-tenant support is achieved through **explicit interfaces**, not complex abstractions.
 
 ---
 
 ## Implementation Requirements
 
-### 1. No Shared State
+### 1. Tenant Interface
+
+```ts
+interface Tenant {
+  id: string;                    // Unique tenant identifier
+  phoneNumberId: string;         // WhatsApp Business phone number ID
+  accessToken: string;           // Meta access token
+  webhookSecret?: string;        // Optional webhook verification secret
+}
+```
+
+### 2. TenantStore Interface
+
+```ts
+interface TenantStore {
+  get(tenantId: string): Promise<Tenant | null>;
+  getByPhoneNumberId(phoneNumberId: string): Promise<Tenant | null>;
+  set(tenant: Tenant): Promise<void>;
+  delete(tenantId: string): Promise<void>;
+}
+```
+
+SDK provides the interface, developers implement it.
+
+### 3. Factory Function
+
+```ts
+function createClient(tenant: Tenant): WhatsAppClient {
+  return new WhatsAppClient(tenant);
+}
+```
+
+The factory validates tenant configuration and creates an isolated client instance.
+
+### 4. No Shared State
 
 The SDK must avoid:
 
@@ -3736,34 +4346,83 @@ The SDK must avoid:
 - Static rate limiters
 - Global caches
 
-### 2. Instance-Scoped Resources
+### 5. Instance-Scoped Resources
 
 Each `WhatsAppClient` must own:
 
-- Configuration object
+- Tenant configuration
 - HTTP client instance
+- Per-tenant rate limiter (token bucket)
 - Retry state
 - Error handler
 - Logger (if configured)
 
-### 3. Documentation
+### 6. Per-Tenant Rate Limiting
+
+Each client maintains its own token bucket:
+
+```ts
+class RateLimiter {
+  private tokens: number;
+  private lastRefill: number;
+  private readonly capacity = 80; // messages per minute
+  
+  async acquire(): Promise<void> {
+    // Token bucket algorithm per instance
+  }
+}
+```
+
+Default: 80 messages/minute per phone number (Meta's limit).
+
+### 7. Per-Tenant Retry Logic
+
+Each client maintains independent retry state:
+
+- Exponential backoff: `delay = 2^attempt * 1000ms` (max 3 retries)
+- Retry on: network errors, 5xx, 429
+- Do NOT retry on: 4xx (except 429), auth errors
+- Dead letter after 3 failures
+
+### 8. Webhook Routing
+
+Core SDK provides:
+
+```ts
+function verifySignature(
+  rawBody: string,
+  signature: string,
+  secret: string
+): boolean;
+
+async function routeWebhook(
+  rawBody: string,
+  signature: string,
+  store: TenantStore
+): Promise<void>;
+```
+
+### 9. Documentation
 
 SDK documentation must include:
 
+- Single-tenant quick start (one tenant, simple)
 - Multi-tenant architecture guide
-- Example implementations (Map, Redis, Database)
+- TenantStore implementation examples (Map, Redis, Database)
+- Webhook routing guide
 - Security best practices
 - Memory benchmarks
-- Dynamic tenant loading patterns
 
-### 4. Testing
+### 10. Testing
 
 Test suite must verify:
 
 - Token isolation between instances
 - Independent retry state
+- Independent rate limit state
 - No cross-instance state leakage
 - Memory overhead benchmarks (1000 instances)
+- Webhook routing logic
 
 ---
 
@@ -3777,12 +4436,12 @@ A separate **optional** package may provide convenience:
 
 Features:
 
-- Pre-built tenant registry implementations
-- Redis/Database adapters
+- Pre-built TenantStore implementations (Redis, Postgres, etc.)
 - Dynamic tenant loading helpers
 - Tenant lifecycle utilities
+- Metrics and monitoring
 
-**Important:** Core SDK remains stateless. Multi-tenant package is a convenience layer, not a requirement.
+**Important:** Core SDK remains simple. Multi-tenant package is optional convenience.
 
 ---
 
@@ -3790,16 +4449,16 @@ Features:
 
 | Component | Change Required |
 |-----------|-----------------|
-| WhatsAppClient | Ensure all state is instance-scoped (already planned) |
-| HTTP Client | Per-instance creation (already planned) |
-| Configuration | Instance property, not static (already planned) |
-| Retry Logic | Instance-scoped state (design requirement) |
-| Rate Limiting | Future feature must be per-instance |
-| Caching | Future feature must be per-instance |
+| WhatsAppClient | Accept Tenant object, ensure all state is instance-scoped |
+| Factory Function | New `createClient(tenant)` export |
+| HTTP Client | Per-instance creation with tenant config |
+| Configuration | Instance property from Tenant object |
+| Rate Limiting | Per-instance token bucket (new requirement) |
+| Retry Logic | Instance-scoped state (new requirement) |
+| Webhook Utilities | Add `routeWebhook()` and `verifySignature()` |
+| Interfaces | Export `Tenant` and `TenantStore` interfaces |
 | Documentation | Add multi-tenant guide (new requirement) |
 | Testing | Add isolation tests (new requirement) |
-
-Most requirements already align with existing architecture—this ADR makes the constraint explicit and adds documentation/testing requirements.
 
 ---
 
@@ -3807,11 +4466,19 @@ Most requirements already align with existing architecture—this ADR makes the 
 
 Multi-tenancy support is complete when:
 
+- ✅ `createClient(tenant)` factory function exists
+- ✅ `Tenant` and `TenantStore` interfaces exported
 - ✅ Multiple client instances coexist without interference
-- ✅ No shared state exists in codebase
-- ✅ Test suite verifies isolation
+- ✅ Each instance maintains isolated configuration
+- ✅ No shared static state exists in codebase
+- ✅ Rate limiting is per-instance
+- ✅ Retry state is per-instance
+- ✅ HTTP clients are per-instance
+- ✅ Webhook routing function exists
+- ✅ Errors in one instance do not affect others
+- ✅ Memory overhead is acceptable (benchmark: 1000 instances)
 - ✅ Documentation includes multi-tenant patterns
-- ✅ Memory overhead benchmarked and acceptable
+- ✅ Test suite verifies isolation guarantees
 
 ---
 
@@ -3822,13 +4489,13 @@ Current architectural decisions:
 | Decision | Choice |
 |---|---|
 | Language | TypeScript |
-| Initial Structure | Single Package |
+| Initial Structure | Single Package (`wasync`) |
 | Core Design | Framework Agnostic |
 | HTTP Communication | Dedicated HTTP Client |
 | Error Handling | Custom Error System |
 | Documentation | Required |
 | Future Growth | Possible Monorepo |
-| Multi-Tenancy | Instance Isolation |
+| Multi-Tenancy | Factory Pattern with Tenant/TenantStore Interfaces |
 
 ---
 

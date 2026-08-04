@@ -6,27 +6,31 @@
 // - format(phone: string): string
 // - getCountryCode(phone: string): string
 
-// interface PhoneValidator {
-//
-// }
+interface PhoneValidator {
+    isValid(phone: string): boolean
+    format(phone: string): string
+    getCountryCode(phone: string): string
+}
 
 // TODO 2: Implement the interface
-// const validator: PhoneValidator = {
-//   isValid: (phone) => {
-//     // Check if starts with + and length >= 10
-//   },
-//
-//   format: (phone) => {
-//     // Add +92 if missing
-//   },
-//
-//   getCountryCode: (phone) => {
-//     // Extract digits after + (first 2-3 digits)
-//     // Example: "+923001234567" -> "92"
-//   }
-// };
+const validator: PhoneValidator = {
+  isValid: (phone) => {
+    return phone.startsWith("+") && phone.length >= 10
+  },
+
+  format: (phone) => {
+    if(!phone.startsWith("+92")){
+       return phone = "+92" + phone
+    }
+    return phone
+  },
+
+  getCountryCode: (phone) => {
+    return phone.slice(1, 3)
+  }
+};
 
 // TODO: Test your validator
-// console.log("Is valid:", validator.isValid("+923001234567"));
-// console.log("Formatted:", validator.format("3001234567"));
-// console.log("Country code:", validator.getCountryCode("+923001234567"));
+console.log("Is valid:", validator.isValid("+923001234567"));
+console.log("Formatted:", validator.format("3001234567"));
+console.log("Country code:", validator.getCountryCode("+923001234567"));

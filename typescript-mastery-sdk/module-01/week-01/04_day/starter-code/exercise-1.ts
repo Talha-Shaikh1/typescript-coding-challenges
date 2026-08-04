@@ -7,9 +7,12 @@
 // - phone: string
 // - isVerified: boolean
 
-// interface User {
-//
-// }
+interface User {
+    name: string
+    email: string
+    phone: string
+    isVerified: boolean
+}
 
 // TODO 2: Create interface ClientConfig
 // Properties:
@@ -18,25 +21,35 @@
 // - apiVersion?: string (optional)
 // - timeout?: number (optional)
 
-// interface ClientConfig {
-//
-// }
+interface ClientConfig {
+    accessToken: string
+    phoneNumberId: string
+    apiVersion?: string
+    timeout?: number
+}
 
 // TODO 3: Create user objects
-// const user1: User = {
-//
-// };
+const user1: User = {
+    name: "Talha",
+    email: "talha@gmail.com",
+    phone: "03121964939",
+    isVerified: true
+};
 
-// const user2: User = {
-//
-// };
+const user2: User = {
+    name: "Shaikh",
+    email: "shaikh@gmail.com",
+    phone: '03399336639',
+    isVerified: false
+};
 
 // TODO 4: Create config object
-// const config: ClientConfig = {
-//
-// };
+const config: ClientConfig = {
+    accessToken: 'token_123',
+    phoneNumberId: 'phone_123'
+};
 
 // TODO: Test your interfaces
-// console.log("User 1:", user1);
-// console.log("User 2:", user2);
-// console.log("Config:", config);
+console.log("User 1:", user1);
+console.log("User 2:", user2);
+console.log("Config:", config);
